@@ -176,7 +176,7 @@ class MidiFile:
         track_name_map = collections.defaultdict(str)
 
         def __get_instrument(
-            program_: int,
+            program_: int | None,
             channel: int,
             track_: int,
             create_new: bool,
@@ -184,7 +184,6 @@ class MidiFile:
             """Gets the Instrument corresponding to the given program number,
             drum/non-drum type, channel, and track index.  If no such
             instrument exists, one is created.
-
             """
             # If we have already created an instrument for this program
             # number/track/channel, return it
@@ -196,7 +195,7 @@ class MidiFile:
                 return stragglers[(channel, track_)]
             # If we are told to, create a new instrument and store it
             if create_new:
-                instrument_ = Instrument(program_, track_name_map[track_idx])
+                instrument_ = Instrument(program_, track_name_map[track_idx], channel=channel)
                 # If any events appeared for this instrument before now,
                 # include them in the new instrument
                 if (channel, track_) in stragglers:
@@ -211,7 +210,7 @@ class MidiFile:
             # instrument
             else:
                 # Create a "straggler" instrument
-                instrument_ = Instrument(program_, track_name_map[track_idx])
+                instrument_ = Instrument(program_, track_name_map[track_idx], channel=channel)
                 # Note that stragglers ignores program number, because we want
                 # to store all events on a track which appear before the first
                 # note-on, regardless of program
