@@ -519,13 +519,14 @@ class MidiFile:
                         "program_change",
                         time=0,
                         program=instrument.program,
+                        channel=instrument.channel,
                     )
                 )
             # segment-related
             # Add all pitch bend events
             bend_list = []
             for bend in instrument.pitch_bends:
-                bend_list.append(mido.Message("pitchwheel", time=bend.time, pitch=bend.pitch))
+                bend_list.append(mido.Message("pitchwheel", time=bend.time, channel=instrument.channel, pitch=bend.pitch))
 
             # Add all control change events
             cc_list = []
@@ -535,6 +536,7 @@ class MidiFile:
                         mido.Message(
                             "control_change",
                             time=control_change.time,
+                            channel=instrument.channel,
                             control=control_change.number,
                             value=control_change.value,
                         )
@@ -546,6 +548,7 @@ class MidiFile:
                         mido.Message(
                             "control_change",
                             time=pedals.start,
+                            channel=instrument.channel,
                             control=64,
                             value=127,
                         )
@@ -555,6 +558,7 @@ class MidiFile:
                         mido.Message(
                             "control_change",
                             time=pedals.end,
+                            channel=instrument.channel,
                             control=64,
                             value=0,
                         )
@@ -579,6 +583,7 @@ class MidiFile:
                     mido.Message(
                         "note_on",
                         time=note.start,
+                        channel=instrument.channel,
                         note=note.pitch,
                         velocity=note.velocity,
                         end=note.end,
@@ -589,6 +594,7 @@ class MidiFile:
                     mido.Message(
                         "note_off",
                         time=note.end,
+                        channel=instrument.channel,
                         note=note.pitch,
                         velocity=note.velocity,
                     )
