@@ -240,6 +240,8 @@ class Instrument:
     ----------
     program : int
         MIDI program number (instrument index), in ``[0, 127]``.
+    is_drum : bool
+        Is the instrument a drum instrument (channel 9)?
     name : str
         Name of the instrument.
 
@@ -247,6 +249,8 @@ class Instrument:
     ----------
     program : int
         The program number of this instrument.
+    is_drum : bool
+        Is the instrument a drum instrument (channel 9)?
     name : str
         Name of the instrument.
     notes : list
@@ -262,10 +266,11 @@ class Instrument:
         self,
         program: int = None,
         name: str = "",
-        notes: Optional[list[Note]] = None,
-        pitch_bends: Optional[list[PitchBend]] = None,
-        control_changes: Optional[list[ControlChange]] = None,
-        pedals: Optional[list[Pedal]] = None,
+        notes: list[Note] | None = None,
+        pitch_bends: list[PitchBend] | None = None,
+        control_changes: list[ControlChange] | None = None,
+        pedals: list[Pedal] | None = None,
+        channel: int = 0,
     ):
         """Create the Instrument."""
         self.program = program
@@ -274,6 +279,8 @@ class Instrument:
         self.pitch_bends = [] if pitch_bends is None else pitch_bends
         self.control_changes = [] if control_changes is None else control_changes
         self.pedals = [] if pedals is None else pedals
+        self.channel = channel
+        self.is_drum = channel == 9
 
     def remove_invalid_notes(self, verbose: bool = True) -> None:
         warnings.warn(
@@ -302,10 +309,9 @@ class Instrument:
         # if two Instrument objects have the same musical content, but with some elements in
         # different orders (for example two notes with swapped indices in a list), the method will
         # return False. To make this method insensible to the lists orders, you can manually sort
-        # them before calling it:
-        # `track.notes.sort(key=lambda x: (x.start, x.pitch, x.end, x.velocity))`.
+        # them before calling it: `track.notes.sort(key=lambda x: (x.start, x.pitch, x.end, x.velocity))`.
         # The same can be done for control_changes, pitch_bends and pedals.
-        if self.program != other.program:
+        if self.is_drum != other.is_drum or self.program != other.program:
             return False
 
         # Check list attributes.
@@ -314,7 +320,12 @@ class Instrument:
         for list_attr in lists_attr:
             if len(getattr(self, list_attr)) != len(getattr(other, list_attr)):
                 return False
-            if any(a1 != a2 for a1, a2 in zip(getattr(self, list_attr), getattr(other, list_attr))):
+            if any(
+                a1 != a2
+                for a1, a2 in zip(
+                    getattr(self, list_attr), getattr(other, list_attr), strict=False
+                )
+            ):
                 return False
 
         # All good, both tracks holds the exact same content
